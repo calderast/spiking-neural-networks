@@ -7,15 +7,14 @@ from torchvision import datasets, transforms
 class SingleLayerCNN(nn.Module):
     def __init__(self):
         super(SingleLayerCNN, self).__init__()
-        self.conv = nn.Conv2d(1, 2, 3)
-        self.conn = nn.Linear(1352, 10)
+        self.conv = nn.Conv2d(1, 2, 16)
+        self.conn = nn.Linear(338, 10)
     def forward(self, x):
         x = self.conv(x)
         x = torch.flatten(x, 1)
         x = F.relu(x)
         x = self.conn(x)
         return x
-        # return F.log_softmax(x, dim=1)
 
 torch.manual_seed(42)
 net = SingleLayerCNN()

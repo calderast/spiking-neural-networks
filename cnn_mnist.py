@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.profiler import profile, record_function, ProfilerActivity
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+
 
 class SingleLayerCNN(nn.Module):
     def __init__(self):
@@ -68,3 +70,25 @@ print(f"Total correctly classified test set images: {correct}/{total}")
 print(f"Test Set Accuracy: {100 * correct / total:.2f}%")
 # end adapted
 
+with profile(activities=[ProfilerActivity.CPU], profile_memory=True, record_shapes=True, with_flops=True) as prof:
+    with torch.no_grad():
+        net.eval()
+        data, targets = next(iter(test_loader))
+        net_out = net(data)
+        predicted = net_out.argmax()
+print("Profiler results for one inference example:")
+print(prof.key_averages().table(sort_by="cpu_memory_usage"))
+
+with profile(activities=[ProfilerActivity.CPU], profile_memory=True, record_shapes=True, with_flops=True) as prof:
+    train_batch = iter(train_loader)
+    print(train_batch)
+    for data, targets in train_batch:
+        net.train()
+        net_out = net(data)
+        loss_val = loss(net_out,targets)
+        optimizer.zero_grad()
+        loss_val.backward()
+        optimizer.step()
+        break
+print("Profiler results for one training example:")
+print(prof.key_averages().table(sort_by="cpu_memory_usage"))
